@@ -1,77 +1,62 @@
-
 import cv2
 import string
 import os
-d={}
-c={}
 
-for i in range(255):
-    d[chr(i)]=i
-    c[i]=chr(i)
-  
-  
-#print(c)
+# Dictionary to map characters to their ASCII values and vice versa
+char_to_int = {chr(i): i for i in range(256)}
+int_to_char = {i: chr(i) for i in range(256)}
 
-x=cv2.imread("jk.jpg")
-if x is not None:
-    i=x.shape[0]
-    j=x.shape[1]
-    print(i,j)
+# Read the input image
+image = cv2.imread("jk.jpg")
+
+# Check if the image is loaded successfully
+if image is not None:
+    height, width, _ = image.shape
+    print("Image dimensions:", height, "x", width)
 else:
-    print("error")
-key=input("Enter key to edit(Security Key) : ")
-text=input("Enter text to hide : ")
+    print("Error: Unable to load the image")
 
-kl=0
-tln=len(text)
-z=0 
-n=0 
-m=0 
+# Function to hide text in the image
+def hide_text_in_image(image, text, key):
+    encrypted_image = image.copy()
+    key_index = 0
 
-l=len(text)
+    for char in text:
+        encrypted_image[0, key_index, 0] = char_to_int[char] ^ char_to_int[key[key_index % len(key)]]
+        key_index += 1
 
-for i in range(l):
-    x[n,m,z]=d[text[i]]^d[key[kl]]
-    n=n+1
-    m=m+1
-    m=(m+1)%3 
-    kl=(kl+1)%len(key)
-    
-cv2.imwrite("encrypted_img.jpg",x) 
-os.startfile("encrypted_img.jpg")
-print("Data Hiding in Image completed successfully.")
+    return encrypted_image
 
-    
+# Function to extract text from the encrypted image
+def extract_text_from_image(encrypted_image, key):
+    decrypted_text = ""
+    key_index = 0
 
-kl=0
-tln=len(text)
-z=0 
-n=0 
-m=0 
+    for i in range(len(text)):
+        decrypted_text += int_to_char[encrypted_image[0, key_index, 0] ^ char_to_int[key[key_index % len(key)]]]
+        key_index += 1
 
-ch = int(input("\nEnter 1 to extract data from Image : "))
+    return decrypted_text
 
-if ch == 1:
-    key1=input("\n\nRe enter key to extract text : ")
-    decrypt=""
+# Main function
+if __name__ == "__main__":
+    key = input("Enter key to edit (Security Key): ")
+    text = input("Enter text to hide: ")
 
-    if key == key1 :
-        for i in range(l):
-            decrypt+=c[x[n,m,z]^d[key[kl]]]
-            n=n+1
-            m=m+1
-            m=(m+1)%3
-            kl=(kl+1)%len(key)
-        print("Encrypted text was : ",decrypt)
+    # Hide text in the image
+    encrypted_image = hide_text_in_image(image, text, key)
+    cv2.imwrite("encrypted_img.jpg", encrypted_image)
+    print("Data hiding in image completed successfully.")
+    os.startfile("encrypted_img.jpg")
+
+    # Extract text from the encrypted image
+    choice = int(input("\nEnter 1 to extract data from the image: "))
+    if choice == 1:
+        key_input = input("\nRe-enter key to extract text: ")
+        if key == key_input:
+            decrypted_text = extract_text_from_image(encrypted_image, key)
+            print("Encrypted text was:", decrypted_text)
+        else:
+            print("Key doesn't match.")
     else:
-        print("Key doesn't matched.")
-else:
-    print("Thank you. EXITING.")
-   
-
-    
-    
- 
-    
-    
-    
+        print("Thank you. EXITING.")
